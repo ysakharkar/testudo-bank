@@ -800,12 +800,48 @@ public class MvcController {
 
   /**
    * 
+   * Called by the submitDeposit HTML POST handler after a user deposits an amount into their account to see 
+   * if the user accrued an interest, and if they did, apply that interest to their account.
+   * 
+   * If the deposit was at least $20 and the user was not in overdraft, the counter for the number of deposits
+   * for which they can accrue an interest is incremented. If the user has made 5 such deposits since the last
+   * time interest was applied, they accrue an interest at the BALANCE_INTEREST_RATE.
    * 
    * @param user
    * @return "account_info" if interest applied. Otherwise, redirect to "welcome" page.
    */
   public String applyInterest(@ModelAttribute("user") User user) {
 
+    String userID = user.getUsername();
+
+    // only update the number of deposits for interest and/or apply interest if the deposit is at least $20 and 
+    // if the user doesn't have any overdraft 
+    if (user.getAmountToDeposit() >= 20.00 && TestudoBankRepository.getCustomerOverdraftBalanceInPennies(jdbcTemplate, userID) == 0) {
+
+      // increment number of deposits for interest
+      int numDepositsForInterest = TestudoBankRepository.getCustomerNumberOfDepositsForInterest(jdbcTemplate, userID);
+      TestudoBankRepository.setCustomerNumberOfDepositsForInterest(jdbcTemplate, userID, numDepositsForInterest + 1);
+
+      // if we are at 5, apply interest
+      if (TestudoBankRepository.getCustomerNumberOfDepositsForInterest(jdbcTemplate, userID) % 5 == 0) {
+        int currentBalanceInPennies = TestudoBankRepository.getCustomerCashBalanceInPennies(jdbcTemplate, userID);
+
+        // difference between balance after interest is applied and old balance is interest amount to be deposited
+        double amountToDeposit = (currentBalanceInPennies * BALANCE_INTEREST_RATE) - currentBalanceInPennies;
+
+        TestudoBankRepository.increaseCustomerCashBalance(jdbcTemplate, userID, (int) amountToDeposit);
+
+        // reset number of deposits for interest to 0
+        TestudoBankRepository.setCustomerNumberOfDepositsForInterest(jdbcTemplate, userID, 0);
+        
+        // insert row into transaction history 
+        String currentTime = SQL_DATETIME_FORMATTER.format(new java.util.Date());
+        TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_DEPOSIT_ACTION, (int) amountToDeposit);
+
+        return "account_info";
+      } 
+
+    }
     return "welcome";
 
   }

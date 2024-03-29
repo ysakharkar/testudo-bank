@@ -47,6 +47,9 @@ public class MvcControllerIntegTest {
   private static String CUSTOMER2_PASSWORD = "password";
   private static String CUSTOMER2_FIRST_NAME = "Foo1";
   private static String CUSTOMER2_LAST_NAME = "Bar1";
+
+  private static double CRYPTO_PRICE_ETH = 1000;
+  private static double CRYPTO_PRICE_SOL = 100;
   
   // Spins up small MySQL DB in local Docker container
   @Container
@@ -1462,6 +1465,56 @@ public void testTransferPaysOverdraftAndDepositsRemainder() throws SQLException,
 
       }
     }
+  }
+
+  /**
+   * Test that a user with no crypto initially buying ETH, then buying SOL, and then selling some of that SOL works as intended
+   */
+  @Test
+  public void buyETHbuySOLsellSOL () throws ScriptException {
+    // user has initial balance of $1000 and has 0.0 ETH and 0.0 SOL
+    CryptoTransactionTester cryptoTransactionTester = CryptoTransactionTester.builder()
+    .initialBalanceInDollars(1000)
+    .initialCryptoBalance(Collections.singletonMap("ETH", 0.0))
+    .build();
+
+    cryptoTransactionTester.initialize();
+
+    // test buying 0.1 ETH
+    CryptoTransaction cryptoTransactionBuyETH = CryptoTransaction.builder()
+        .expectedEndingBalanceInDollars(900)
+        .expectedEndingCryptoBalance(0.1)
+        .cryptoPrice(CRYPTO_PRICE_ETH)
+        .cryptoAmountToTransact(0.1)
+        .cryptoName("ETH")
+        .cryptoTransactionTestType(CryptoTransactionTestType.BUY)
+        .shouldSucceed(true)
+        .build();
+    cryptoTransactionTester.test(cryptoTransactionBuyETH);
+
+    // test buying 1.0 SOL
+    CryptoTransaction cryptoTransactionBuySOL = CryptoTransaction.builder()
+        .expectedEndingBalanceInDollars(800)
+        .expectedEndingCryptoBalance(1.0)
+        .cryptoPrice(CRYPTO_PRICE_SOL)
+        .cryptoAmountToTransact(1.0)
+        .cryptoName("SOL")
+        .cryptoTransactionTestType(CryptoTransactionTestType.BUY)
+        .shouldSucceed(true)
+        .build();
+    cryptoTransactionTester.test(cryptoTransactionBuySOL);
+
+    // test selling 0.5 SOL
+    CryptoTransaction cryptoTransactionSellSOL = CryptoTransaction.builder()
+            .expectedEndingBalanceInDollars(850)
+            .expectedEndingCryptoBalance(0.5)
+            .cryptoPrice(CRYPTO_PRICE_SOL)
+            .cryptoAmountToTransact(0.5)
+            .cryptoName("SOL")
+            .cryptoTransactionTestType(CryptoTransactionTestType.SELL)
+            .shouldSucceed(true)
+            .build();
+    cryptoTransactionTester.test(cryptoTransactionSellSOL);
   }
 
   /**

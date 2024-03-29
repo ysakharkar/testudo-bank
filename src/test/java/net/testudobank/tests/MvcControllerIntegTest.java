@@ -1467,6 +1467,61 @@ public void testTransferPaysOverdraftAndDepositsRemainder() throws SQLException,
     }
   }
 
+  
+  /**
+   * Test trying to buy BTC, which is not a crypto the user should be able to purchase with our banking system;
+   * this should return the "welcome" page to the user
+   */
+  @Test
+  public void buyBTCInvalid () throws ScriptException {
+    // user has initial balance of $50000 and 0.0 ETH and 0.0 SOL
+    CryptoTransactionTester cryptoTransactionTester = CryptoTransactionTester.builder()
+    .initialBalanceInDollars(50000)
+    .initialCryptoBalance(Collections.singletonMap("ETH", 0.0))
+    .build();
+
+    cryptoTransactionTester.initialize();
+
+    // trying to buy $2000 worth of BTC should not change the user's crypto or cash balance and should not succeed
+    CryptoTransaction cryptoTransactionBuyBTC = CryptoTransaction.builder()
+            .expectedEndingBalanceInDollars(50000)
+            .expectedEndingCryptoBalance(0) // should not have any BTC balance
+            .cryptoPrice(20000)
+            .cryptoAmountToTransact(0.1)
+            .cryptoName("BTC")
+            .cryptoTransactionTestType(CryptoTransactionTestType.BUY)
+            .shouldSucceed(false) // transaction should not succeed; this will return the welcome page
+            .build();
+    cryptoTransactionTester.test(cryptoTransactionBuyBTC);
+  }
+
+    /**
+   * Test trying to sell BTC, which is not a crypto the user should be able to purchase or sell with our banking system;
+   * this should return the "welcome" page to the user
+   */
+  @Test
+  public void sellBTCInvalid () throws ScriptException {
+    // user has initial balance of $50000 and 5.0 ETH, 0.0 SOL
+    CryptoTransactionTester cryptoTransactionTester = CryptoTransactionTester.builder()
+    .initialBalanceInDollars(50000)
+    .initialCryptoBalance(Collections.singletonMap("ETH", 5.0))
+    .build();
+
+    cryptoTransactionTester.initialize();
+
+    // trying to sell $1000 worth of BTC should not change the user's crypto or cash balance and should not succeed
+    CryptoTransaction cryptoTransactionBuyBTC = CryptoTransaction.builder()
+            .expectedEndingBalanceInDollars(50000)
+            .expectedEndingCryptoBalance(0) // should not get any BTC balance
+            .cryptoPrice(20000)
+            .cryptoAmountToTransact(0.1)
+            .cryptoName("BTC")
+            .cryptoTransactionTestType(CryptoTransactionTestType.BUY)
+            .shouldSucceed(false) // transaction should not succeed; this will return the welcome page
+            .build();
+    cryptoTransactionTester.test(cryptoTransactionBuyBTC);
+  }
+
   /**
    * Test that a user with no crypto initially buying ETH, then buying SOL, and then selling some of that SOL works as intended
    */

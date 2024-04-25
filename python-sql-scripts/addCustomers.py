@@ -135,7 +135,7 @@ for i in range(num_customers_to_add):
                 "'" + customer_first_name + "'",
                 "'" + customer_last_name + "'",
                 customer_balance,
-                0,
+                customer_balance,
                 0,
                 0)
     cursor.execute(insert_customer_sql)

@@ -18,9 +18,9 @@ create_customer_table_sql = '''
     FirstName varchar(255),
     LastName varchar(255),
     Balance int,
+    TotalDeposit int,
     OverdraftBalance int,
-    NumFraudReversals int,
-    NumDepositsForInterest int
+    NumFraudReversals int
   );
   '''
 cursor.execute(create_customer_table_sql)
@@ -52,7 +52,8 @@ CREATE TABLE TransactionHistory (
   CustomerID varchar(255),
   Timestamp DATETIME,
   Action varchar(255) CHECK (Action IN ('Deposit', 'Withdraw', 'TransferSend', 'TransferReceive', 'CryptoBuy', 'CryptoSell')),
-  Amount int
+  Amount int,
+  TreesPlanted int
 );
 '''
 cursor.execute(create_transactionhistory_table_sql)

@@ -119,6 +119,7 @@ public class TestudoBankRepository {
     jdbcTemplate.update(overdraftBalanceIncreaseSql);
   }
 
+
   public static void setCustomerCashBalance(JdbcTemplate jdbcTemplate, String customerID, int newBalanceInPennies) {
     String updateBalanceSql = String.format("UPDATE Customers SET Balance = %d WHERE CustomerID='%s';", newBalanceInPennies, customerID);
     jdbcTemplate.update(updateBalanceSql);
@@ -127,6 +128,11 @@ public class TestudoBankRepository {
   public static void increaseCustomerCashBalance(JdbcTemplate jdbcTemplate, String customerID, int increaseAmtInPennies) {
     String balanceIncreaseSql = String.format("UPDATE Customers SET Balance = Balance + %d WHERE CustomerID='%s';", increaseAmtInPennies, customerID);
     jdbcTemplate.update(balanceIncreaseSql);
+  }
+
+  public static void increaseTotalDeposit(JdbcTemplate jdbcTemplate, String customerID, int increaseAmtInPennies) {
+    String totalDepositIncreaseSql = String.format("UPDATE Customers SET TotalDeposit = TotalDeposit + %d WHERE CustomerID='%s';", increaseAmtInPennies, customerID);
+    jdbcTemplate.update(totalDepositIncreaseSql);
   }
 
   public static void initCustomerCryptoBalance(JdbcTemplate jdbcTemplate, String customerID, String cryptoName) {

@@ -44,6 +44,7 @@
     <span>Crypto History: </span><span>${user.cryptoHist}</span><br/>
     <span>Trees Planted: </span><span>${user.treesPlanted}</span><br/>
     <span>1 Tree for every $100 Deposited into your Testudo Bank Account!</span><br/>
+    <span>Dollars needed to plant the next full tree: $</span><span>${user.treesPlanted % 1 == 0.0 ? String.format("%.2f", 100.0) : String.format("%.2f", (1 - user.treesPlanted % 1) * 100)}</span><br/>
     <br/>
     <a href='/deposit'>Deposit</a>
     <a href='/withdraw'>Withdraw</a>

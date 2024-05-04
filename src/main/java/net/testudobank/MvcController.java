@@ -198,6 +198,9 @@ public class MvcController {
     List<Map<String,Object>> transactionLogs = TestudoBankRepository.getRecentTransactions(jdbcTemplate, user.getUsername(), MAX_NUM_TRANSACTIONS_DISPLAYED);
     String transactionHistoryOutput = HTML_LINE_BREAK;
     for(Map<String, Object> transactionLog : transactionLogs){
+      if ((Float) transactionLog.get("TreesPlanted") == 0) {
+        transactionLog.remove("TreesPlanted");
+      }
       transactionHistoryOutput += transactionLog + HTML_LINE_BREAK;
     }
 

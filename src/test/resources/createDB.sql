@@ -26,7 +26,8 @@ CREATE TABLE TransactionHistory (
   CustomerID varchar(255),
   Timestamp DATETIME,
   Action varchar(255) CHECK (Action IN ('Deposit', 'Withdraw', 'TransferSend', 'TransferRecieve', 'CryptoBuy', 'CryptoSell')),
-  Amount int
+  Amount int,
+  TreesPlanted float
 );
 
 CREATE TABLE TransferHistory (

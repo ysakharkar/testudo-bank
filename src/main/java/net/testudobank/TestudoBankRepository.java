@@ -85,12 +85,13 @@ public class TestudoBankRepository {
     jdbcTemplate.update(customerInterestDepositsSql);
   }
 
-  public static void insertRowToTransactionHistoryTable(JdbcTemplate jdbcTemplate, String customerID, String timestamp, String action, int amtInPennies) {
-    String insertRowToTransactionHistorySql = String.format("INSERT INTO TransactionHistory VALUES ('%s', '%s', '%s', %d);",
+  public static void insertRowToTransactionHistoryTable(JdbcTemplate jdbcTemplate, String customerID, String timestamp, String action, int amtInPennies, double treesPlanted) {
+    String insertRowToTransactionHistorySql = String.format("INSERT INTO TransactionHistory VALUES ('%s', '%s', '%s', %d, %f);",
                                                               customerID,
                                                               timestamp,
                                                               action,
-                                                              amtInPennies);
+                                                              amtInPennies,
+                                                              treesPlanted);
     jdbcTemplate.update(insertRowToTransactionHistorySql);
   }
 

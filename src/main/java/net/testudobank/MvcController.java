@@ -51,6 +51,7 @@ public class MvcController {
   public static String CRYPTO_HISTORY_BUY_ACTION = "Buy";
   public static Set<String> SUPPORTED_CRYPTOCURRENCIES = new HashSet<>(Arrays.asList("ETH", "SOL"));
   private static double BALANCE_INTEREST_RATE = 1.015;
+  private static double PENNIES_PER_TREE = 10000.0;
 
   public MvcController(@Autowired JdbcTemplate jdbcTemplate, @Autowired CryptoPriceClient cryptoPriceClient) {
     this.jdbcTemplate = jdbcTemplate;
@@ -198,6 +199,7 @@ public class MvcController {
     List<Map<String,Object>> transactionLogs = TestudoBankRepository.getRecentTransactions(jdbcTemplate, user.getUsername(), MAX_NUM_TRANSACTIONS_DISPLAYED);
     String transactionHistoryOutput = HTML_LINE_BREAK;
     for(Map<String, Object> transactionLog : transactionLogs){
+      // if TreesPlanted field is 0, don't print that field in the user's transaction history
       if ((Float) transactionLog.get("TreesPlanted") == 0) {
         transactionLog.remove("TreesPlanted");
       }
@@ -229,7 +231,7 @@ public class MvcController {
     user.setFirstName((String)userData.get("FirstName"));
     user.setLastName((String)userData.get("LastName"));
     user.setBalance((int)userData.get("Balance")/100.0);
-    user.setTreesPlanted((int) userData.get("TotalDeposit") / 10000.0);
+    user.setTreesPlanted((int) userData.get("TotalDeposit") / PENNIES_PER_TREE);
     double overDraftBalance = (int)userData.get("OverdraftBalance");
     user.setOverDraftBalance(overDraftBalance/100);
     user.setCryptoBalanceUSD(cryptoBalanceInDollars);
@@ -340,13 +342,14 @@ public class MvcController {
       TestudoBankRepository.setCustomerOverdraftBalance(jdbcTemplate, userID, newOverdraftBalanceInPennies);
       TestudoBankRepository.insertRowToOverdraftLogsTable(jdbcTemplate, userID, currentTime, userDepositAmtInPennies, userOverdraftBalanceInPennies, newOverdraftBalanceInPennies);
       
-      // add any excess deposit amount to main balance in Customers table
+      // add any excess deposit amount to main balance and total deposit in Customers table
       if (userDepositAmtInPennies > userOverdraftBalanceInPennies) {
         int mainBalanceIncreaseAmtInPennies = userDepositAmtInPennies - userOverdraftBalanceInPennies;
         TestudoBankRepository.increaseCustomerCashBalance(jdbcTemplate, userID, mainBalanceIncreaseAmtInPennies);
+        TestudoBankRepository.increaseTotalDeposit(jdbcTemplate, userID, mainBalanceIncreaseAmtInPennies);
       }
 
-    } else { // simple deposit case
+    } else { // simple deposit case -- increase balance and total deposit in Customers table
       TestudoBankRepository.increaseCustomerCashBalance(jdbcTemplate, userID, userDepositAmtInPennies);
       TestudoBankRepository.increaseTotalDeposit(jdbcTemplate, userID, userDepositAmtInPennies);
     }
@@ -359,7 +362,7 @@ public class MvcController {
       TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_CRYPTO_SELL_ACTION, userDepositAmtInPennies, 0);
     } else {
       // Adds deposit to transaction history
-      TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_DEPOSIT_ACTION, userDepositAmtInPennies, (double) userDepositAmtInPennies / 10000.0);
+      TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_DEPOSIT_ACTION, userDepositAmtInPennies, (double) userDepositAmtInPennies / PENNIES_PER_TREE);
     }
 
     // update Model so that View can access new main balance, overdraft balance, and logs

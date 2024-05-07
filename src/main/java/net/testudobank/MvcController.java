@@ -361,8 +361,17 @@ public class MvcController {
     } else if (user.isCryptoTransaction()) {
       TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_CRYPTO_SELL_ACTION, userDepositAmtInPennies, 0);
     } else {
-      // Adds deposit to transaction history
-      TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_DEPOSIT_ACTION, userDepositAmtInPennies, (double) userDepositAmtInPennies / PENNIES_PER_TREE);
+      int userAmtEligibleForTreesInPennies = userDepositAmtInPennies - userOverdraftBalanceInPennies;
+      
+      // only if the overdraft is paid off an the account goes into positives can trees be planted in the transaction history
+      if (userAmtEligibleForTreesInPennies > 0) { 
+        // Adds deposit to transaction history
+        TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_DEPOSIT_ACTION, userDepositAmtInPennies, (double) userAmtEligibleForTreesInPennies / PENNIES_PER_TREE);
+      }
+      // otherwise, no trees are planted
+      else {
+        TestudoBankRepository.insertRowToTransactionHistoryTable(jdbcTemplate, userID, currentTime, TRANSACTION_HISTORY_DEPOSIT_ACTION, userDepositAmtInPennies, 0);
+      }
     }
 
     // update Model so that View can access new main balance, overdraft balance, and logs
